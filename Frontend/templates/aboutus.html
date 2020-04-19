@@ -1,0 +1,84 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Bootstrap Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="jumbotron text-center" style="background-color:orange;">
+        <h1>About us</h1>
+        <p><i>Members of the project</i></p>
+    </div>
+    <div class="container">
+
+        <div class="row hidden-md-up">
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <img class="card-img-top img_size_card" src="{% static 'images/Uday.jpeg' %}" alt="Uday" height = 350px;>
+                    <div class="card-body">
+                        <h4 class="card-title">Uday Juttu</h4>
+                        <p class="card-text">Masters in Engineering Management</p>
+                        <a target="_blank" href="https://www.linkedin.com/in/udayjuttu/" class="btn btn-primary">See
+                            Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <img class="card-img-top img_size_card" src="{% static 'images/pp2.jpg' %}" alt="Saikumar" height = 350px;>
+                    <div class="card-body">
+                        <h4 class="card-title">Saikumar Katepalli</h4>
+                        <p class="card-text">Masters in Information Systems</p>
+                        <a target="_blank" href="https://www.linkedin.com/in/saikumarkatepalli/"
+                            class="btn btn-primary">See
+                            Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <img class="card-img-top img_size_card" src="{% static 'images/Sylvester.jpeg' %}" alt="Sylvester" height = 350px; >
+                    <div class="card-body">
+                        <h4 class="card-title">Sylvester Noronha</h4>
+                        <p class="card-text">Masters in Information Systems</p>
+                        <a target="_blank" href="https://www.linkedin.com/in/sylvesternoronha/"
+                            class="btn btn-primary">See Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <img class="card-img-top img_size_card" src="{% static 'images/Sathwik.jpeg' %}" alt="Sathwik" height = 350px;>
+                    <div class="card-body">
+                        <h4 class="card-title">Sathwik Kalluri</h4>
+                        <p class="card-text">Masters in Information Systems</p>
+                        <a target="_blank" href="https://www.linkedin.com/in/sathwik-kalluri-3708a6a3/"
+                            class="btn btn-primary">See Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <img class="card-img-top img_size_card" src="{% static 'images/Tejaswini.jpeg' %}" alt="Tejaswini" height = 350px;>
+                    <div class="card-body">
+                        <h4 class="card-title">Tejaswini Talekar</h4>
+                        <p class="card-text">Masters in Information Systems</p>
+                        <a target="_blank" href="https://www.linkedin.com/in/tejaswini-talekar/"
+                            class="btn btn-primary">See Profile</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
