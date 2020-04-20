@@ -2,7 +2,7 @@ from PIL import Image
 
 class split_strip():
     def __init__(self,image):
-        self.image=Image.open(image)#Image.open(r'C:\Users\juttu\Desktop\strip_images\1.jpg')
+        self.image=Image.open(image)
         self.width,self.height=self.image.size
         self.start_width=0
         self.split_length=self.width/3

@@ -8,11 +8,9 @@ import time
 from PIL import Image
 import pygame
 from gtts import gTTS
-from obj_detection import object_detection
+from obj_detection import object_dectection
 from datetime import date
-import re
-#from get_user_info import get_user_id
-
+from model import model
 
 def listen_to_blind():
     mic=sr.Microphone()
@@ -37,14 +35,14 @@ def listen_to_blind():
 
 def retry_listening():
     mic=sr.Microphone()
-    r=sr.Recognizer()
+    k=sr.Recognizer()
     with mic as source:
         time.sleep(1)
         send_the_message('can you speak again')
-        r.adjust_for_ambient_noise(source)
-        audio=r.listen(source)
+        k.adjust_for_ambient_noise(source)
+        audio=k.listen(source)
     try:
-        voice_text=r.recognize_google(audio)
+        voice_text=k.recognize_google(audio)
         return voice_text
     except sr.UnknownValueError:
         print("Sorry, Google speech Recognition could not understand audio")
@@ -121,13 +119,13 @@ def generate_objects(obj_lis):
 #
 def get_user_id(first_name,last_name, phone_number):
     try:
-        connector = MySQLConnection(user='root', password='root@123',
+        connector = MySQLConnection(user='username', password='enter_password',
                                     host='127.0.0.1',
-                                    database="comic")
-        cursor = connector.cursor(buffered=True)
+                                    database="project")
+        cursor = connector.cursor()
     except Error as e:
         print("connection error {}".format(e))
-        sys.exit()
+        sys.exit("unable to connect to db")
     try:
         # check the values in the database
         insert_values = (first_name,last_name,phone_number)
@@ -141,18 +139,6 @@ def get_user_id(first_name,last_name, phone_number):
         return None
 
 
-def preprocess_bubble_text(bubble_text):
-    s = re.sub('._.', '', bubble_text)
-    s = s.replace("JIM", '')
-    s = s.replace('DAVIS','')
-    s = s.replace('All rights reserved', '')
-    s = s.replace("(numbers)", '')
-    s = s.replace("1979", '')
-    s = s.replace('INC,', '')
-    bubble_text_cleaned = s.replace('O0o', '')
-    return bubble_text_cleaned
-
-
 #start of the main application
 class start_application():
     def __init__(self):
@@ -163,12 +149,11 @@ class start_application():
             send_the_message('Closing the application')
             sys.exit()
         else:
-            self.chapter = ask_the_request("Please tell the chapter ID you want to listen")
             self.first_name=ask_the_request('Please tell your first name')
             self.last_name=ask_the_request("Please tell your Last Name")
             self.name = self.first_name + " " + self.last_name
             self.phone_number =ask_the_request("Please tell your phone number")
-
+            self.chapter=ask_the_request("Please tell the chapter ID you want to listen")
             self.chapter_id=extract_chapter_id(self.chapter)
             print("This is chapter number "+self.chapter_id)
             if self.chapter_id is None:
@@ -179,18 +164,15 @@ class start_application():
 
     def store_user_information_db(self):
         try:
-            connector = MySQLConnection(user='root', password='root@123',
+            connector = MySQLConnection(user='username', password='enter_password',
                                         host='127.0.0.1',
-                                        database="comic")
+                                        database="project")
             cursor = connector.cursor()
         except Error as e:
             print("connection error {}".format(e))
-            sys.exit()
+            sys.exit("unable to connect to db")
         try:
             insert_values = (self.first_name, self.last_name,self.phone_number)
-            print(self.first_name)
-            print(self.last_name)
-            print(self.phone_number)
             insert_command = "INSERT INTO user_info(user_first_name, user_last_name, user_phone_number) VALUES(%s,%s,%s)"
             cursor.execute(insert_command, insert_values)
             connector.commit()
@@ -206,7 +188,9 @@ class ask_data_to_user(start_application):
         self.phone_number=classA.phone_number
 
     def process_to_model(self):
-        connector = MySQLConnection(user='root', password='root@123', host='127.0.0.1', database='comic')
+        connector = MySQLConnection(user='username', password='enter_password',
+                                    host='127.0.0.1',
+                                    database="project")
         self.cx = connector.cursor()
         # need to change to the date format need to verify this
         query_fetch_raw_image_id="SELECT img_id FROM raw_table WHERE img_id=%s"
@@ -223,43 +207,39 @@ class ask_data_to_user(start_application):
             txt_bubble = bubble_text.detect_text()
 
             if txt_bubble is None:
-                pass
+                gen_text= model.predict(image)
+                send_the_message("we are in page {} of chapter {} ".format(i, self.chapter_id))
+                send_the_message("Conversation in image is as follows: ")
+                send_the_message(gen_text)
             else:
-                obj_detection = object_detection(image)
+                obj_detection = object_dectection(image)
                 image_objects = obj_detection.run_model()
-            obj = generate_objects(image_objects)
+                obj = generate_objects(image_objects)
+                txt_from_bubble=txt_bubble
+                if 'bubble' in obj:
+                    objects = obj.replace("bubble", '')
+                else:
+                    objects=obj
+                print("we are in page {} of chapter {} and we have ".format(i, self.chapter_id) + str(
+                    objects) + " in the current scene ")
+                print("Conversation in image is as follows: ")
+                # text-voice output to user
+                send_the_message("we are in page {} of chapter {} and we have ".format(i,self.chapter_id)+ str(objects) + " in the current scene ")
+                send_the_message("Conversation in image is as follows: ")
+                time.sleep(1)
+                send_the_message(str(txt_from_bubble))
 
-            txt_from_bubble=preprocess_bubble_text(txt_bubble)
-
-            if 'bubble' in obj:
-                objects = obj.replace("bubble", '')
-            else:
-                objects=obj
-            print("we are in page {} of chapter {} and we have ".format(i, self.chapter_id) + str(
-                objects) + " in the current scene ")
-            print("Conversation in image is as follows: ")
-            # text-voice output to user
-            send_the_message("we are in page {} of chapter {} and we have ".format(i,self.chapter_id)+ str(objects) + " in the current scene ")
-            send_the_message("Conversation in image is as follows: ")
-            time.sleep(1)
-            send_the_message(str(txt_from_bubble))
-
-#ask the user to review on comic on the particular date
-        self.comment_on_comic = ask_the_request("Would you like to comment on this chapters if yes say Yes else NO")
-        comment_reponse = preprocess(self.comment_on_comic, 'yes')
-        comment_reponse=True
-        if bool(comment_reponse) == True:
+        #ask the user to review on comic on the particular date
+        self.comment_on_comic = ask_the_request("Would you like to comment on this chapters if yes say yes else no")
+        if bool('y' in self.comment_on_comic.lower())==True:
             user_id = get_user_id(self.first_name,self.last_name ,self.phone_number)
-            print(user_id)
             comment = ask_the_request("Please mention your comment now")
             self.store_the_comment(user_id, self.chapter_id, comment)
 
         # listem to comment
         self.listen_to_user_comments = ask_the_request(
             "Would you like to listen to User comments on same chapter or different is same say yes else no if you want to exit say bye")
-        print(self.listen_to_user_comments)
-
-        listen_comments_reponse = preprocess(self.listen_to_user_comments, 'yes')
+        listen_comments_reponse = preprocess(self.listen_to_user_comments, 'y')
         if bool(listen_comments_reponse) == True:
             comments=self.fetch_comments(self.chapter_id)
             if comments is not None:
@@ -267,11 +247,9 @@ class ask_data_to_user(start_application):
                     send_the_message(comment[0])
             else:
                 send_the_message("we don't Found any comments for the chapter id")
-
         if bool('b' in self.listen_to_user_comments.lower())==True:
             send_the_message("Thanks for using comic world I hope you like it")
             sys.exit()
-
         if bool('n' in self.listen_to_user_comments.lower())== True:
             chapter_number = ask_the_request("Mention the Chapter Number")
             chapter =extract_chapter_id(chapter_number)
@@ -284,12 +262,9 @@ class ask_data_to_user(start_application):
         else:
             send_the_message("we didn't received any voice from you")
 
-
-
         # ask again user to continue the series
-
         request_for_continution = ask_the_request("would you like to continue the series if so say yes else no")
-        continution_response = preprocess(request_for_continution, "yes")
+        continution_response = preprocess(request_for_continution, "y")
         if bool(continution_response) == True:
             self.chapter_id = int(self.chapter_id) + 1
             self.process_to_model()
@@ -303,9 +278,9 @@ class ask_data_to_user(start_application):
         self.comment = comment
         self.comment_date = str(date.today())
         try:
-            connector = MySQLConnection(user='root', password='root@123',
+            connector = MySQLConnection(user='username', password='enter_password',
                                         host='127.0.0.1',
-                                        database="comic")
+                                        database="project")
             cursor = connector.cursor()
         except Error as e:
             print("connection error {}".format(e))
@@ -322,9 +297,9 @@ class ask_data_to_user(start_application):
     def fetch_comments(self, chapter_id):
         self.chapter_id = chapter_id
         try:
-            connector = MySQLConnection(user='root', password='root@123',
+            connector = MySQLConnection(user='username', password='enter_password',
                                         host='127.0.0.1',
-                                        database="comic")
+                                        database="project")
             cursor = connector.cursor(buffered=True)
         except Error as e:
             print("connection error {}".format(e))
